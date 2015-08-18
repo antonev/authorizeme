@@ -11,7 +11,7 @@ Firstly, we need to install AuthorizeMe:
 
 .. code-block:: bash
 
-    pip install authorizeme
+    $ pip install authorizeme
 
 
 Creating Authorization Object
