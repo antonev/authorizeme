@@ -16,6 +16,7 @@ Contents:
 
    tutorial
    api
+   changelog
 
 Indices and tables
 ==================

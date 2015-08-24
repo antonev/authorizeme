@@ -1,0 +1,12 @@
+Version 0.2
+-----------
+
+- Added ability to associate authorization rule with multiple classes at once.
+- Added ability to associate authorization rule with nothing.
+- Added ability to check multiple permissions at once.
+- Changed parameters order of method :meth:`authorizeme.Authorization.add_rule`
+
+Version 0.1.0
+-------------
+
+First release.

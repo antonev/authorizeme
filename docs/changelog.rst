@@ -1,0 +1,4 @@
+AuthorizeMe Changelog
+=====================
+
+.. include:: ../CHANGES

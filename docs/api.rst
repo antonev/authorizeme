@@ -14,3 +14,5 @@ Classes
 .. autoclass:: AuthorizationError
     
 .. autoclass:: PermissionError
+
+.. autoclass:: RuleError
