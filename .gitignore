@@ -4,5 +4,6 @@
 .coverage
 .tox
 dist
+build
 authorizeme.egg-info
 docs/_build
