@@ -1,3 +1,8 @@
+Version 0.2.1
+-------------
+
+- Fixed method :meth:`authorizeme.Authorization.rule`
+
 Version 0.2
 -----------
 

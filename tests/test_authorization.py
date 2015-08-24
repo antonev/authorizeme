@@ -30,6 +30,8 @@ def authorization(request):
 
     from authorizeme import Authorization
 
+    authz = Authorization()
+
     class AppRule(object):
         def can_add_blog(self, user):
             return user.is_admin
@@ -51,10 +53,8 @@ def authorization(request):
         def can_rate(self, user, obj):
             return obj.author is not user
 
-    authz = Authorization()
-
     if configuration_type == 'declarative':
-        authz.rule()(AppRule)
+        authz.rule(AppRule)
         authz.rule_for(Article)(ArticleRule)
         authz.rule_for([BookReview, MovieReview])(ArticleRule)
         authz.rule_for(Blog)(BlogRule)

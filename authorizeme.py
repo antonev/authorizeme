@@ -1,7 +1,7 @@
 from collections import Iterable
 
 
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 
 try:
@@ -59,9 +59,10 @@ class Authorization(object):
             return rule_class
         return decorator
 
-    def rule(self):
+    def rule(self, rule_class):
         """Decorates and adds an authorization rule."""
-        return self.rule_for(_Nothing)
+        self.add_rule(rule_class)
+        return rule_class
 
     def check(self, user, permission, obj=_nothing):
         """Raises AuthorizationError when a user has no permission.
