@@ -1,14 +1,32 @@
-__version__ = '0.1.0'
+from collections import Iterable
+
+
+__version__ = '0.2'
+
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 class PermissionError(Exception):
     """Raised when permission is invalid."""
-    pass
+
+
+class RuleError(Exception):
+    """Raised when there is no authorization rule for class of given object."""
 
 
 class AuthorizationError(Exception):
     """Raised when user has no permission."""
-    pass
+
+
+class _Nothing(object):
+    """Default class to associate authorization rules with."""
+
+
+_nothing = _Nothing()  # default object to check permission for
 
 
 class Authorization(object):
@@ -16,63 +34,98 @@ class Authorization(object):
     def __init__(self):
         self._rules = {}
 
-    def add_rule(self, target_class, rule_class):
-        """Adds an authorization rule for a specified class of objects.
+    def add_rule(self, rule_class, target_class=_Nothing):
+        """Adds an authorization rule.
 
-        :param target_class: class of objects.
-        :param rule_class: class of authorization rule.
+        :param rule_class: a class of authorization rule.
+        :param target_class: (optional) a class
+            or an iterable with classes to associate the rule with.
         """
-        self._rules[target_class] = rule_class
+        if isinstance(target_class, Iterable):
+            for cls in target_class:
+                self._rules[cls] = rule_class
+        else:
+            self._rules[target_class] = rule_class
 
     def rule_for(self, target_class):
-        """Decorates and adds an authorization rule for a specified class of objects.
+        """Decorates and adds an authorization rule
+        for a specified class(es) of objects.
 
-        :param target_class: a class of objects.
+        :param target_class: a class or an iterable with classes
+            to associate the rule with.
         """
         def decorator(rule_class):
-            self.add_rule(target_class, rule_class)
+            self.add_rule(rule_class, target_class)
             return rule_class
         return decorator
 
-    def check(self, user, permission, obj):
+    def rule(self):
+        """Decorates and adds an authorization rule."""
+        return self.rule_for(_Nothing)
+
+    def check(self, user, permission, obj=_nothing):
         """Raises AuthorizationError when a user has no permission.
 
         :param user: a user.
         :param permission: permission to check.
-        :param obj: an object.
+        :param obj: (optional) an object to check permission for.
         """
         if not self.allows(user, permission, obj):
-            raise AuthorizationError()
+            raise AuthorizationError(
+                'Can\'t {} object of class {}'.format(
+                    permission, type(obj)))
 
-    def allows(self, user, permission, obj):
-        """Checks that a user has permission for an object.
-        Returns True of False.
+    def allows(self, user, permission, obj=_nothing):
+        """Checks that a user has permission. Returns True or False.
 
         :param user: a user.
         :param permission: permission to check.
-        :param obj: an object.
+        :param obj: (optional) an object to check permission for.
         """
         rule = self._get_rule(obj)
 
+        if not isinstance(permission, basestring):
+            return all(
+                self._use_rule(rule, user, perm, obj)
+                for perm in permission
+            )
+
+        return self._use_rule(rule, user, permission, obj)
+
+    def _get_rule(self, obj):
+        try:
+            rule_class = self._rules[type(obj)]
+        except KeyError:
+            raise RuleError(
+                'There is no authorization rule '
+                'for class {}'.format(type(obj))
+            )
+
+        return rule_class()
+
+    def _use_rule(self, rule, user, permission, obj):
         try:
             checker = self._get_checker(rule, permission)
         except AttributeError:
-            raise PermissionError()
+            raise PermissionError(
+                'Unknown permission "{}" for object '
+                'of class {}'.format(permission, type(obj))
+            )
+
+        if obj is _nothing:
+            return checker(user)
 
         return checker(user, obj)
-
-    def _get_rule(self, obj):
-        return self._rules[type(obj)]()
 
     @staticmethod
     def _get_checker(rule, permission):
         return getattr(rule, 'can_{}'.format(permission))
 
-    def get_permissions(self, user, obj):
-        """Returns permissions set of a user for an object.
+    def get_permissions(self, user, obj=_nothing):
+        """Returns permissions of a user.
 
         :param user: a user.
-        :param obj: an object.
+        :param obj: (optional) an object to get permissions for.
         """
         rule = self._get_rule(obj)
 
